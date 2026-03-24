@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fbde2850ce42314cb796bf63bd1fe68, type: 3}
+  m_Name: Profile_Happy
+  m_EditorClassIdentifier: 
+  mainLightColor: {r: 0.7169812, g: 0.6732649, b: 0.32805273, a: 1}
+  mainLightIntensity: 1.1
+  fogEnabled: 1
+  fogColor: {r: 0.8113208, g: 0.7976345, b: 0.4018334, a: 1}
+  fogDensity: 0.002
+  audioSnapshotName: 
+  ambienceVolume: 0.9
