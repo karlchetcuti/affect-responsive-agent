@@ -6,6 +6,7 @@ public class EmotionalStateController : MonoBehaviour
     public DimensionalEmotionData baselineState = DimensionalEmotionData.Neutral();
     public DimensionalEmotionData currentState;
     public DimensionalEmotionData targetState;
+    public string emotionLabel;
 
     private bool inDebug = false;
 
@@ -91,7 +92,7 @@ public class EmotionalStateController : MonoBehaviour
         inDebug = true;
     }
 
-    public string GetDebugLabel()
+    public string GetEmotionLabel()
     {
         string bestLabel = "neutral";
         float bestDistance = Distance(currentState, DimensionalEmotionData.Neutral());
@@ -102,6 +103,8 @@ public class EmotionalStateController : MonoBehaviour
         TryPrototype("sadness", Sadness, ref bestLabel, ref bestDistance);
         TryPrototype("surprise", Surprise, ref bestLabel, ref bestDistance);
         TryPrototype("disgust", Disgust, ref bestLabel, ref bestDistance);
+
+        emotionLabel = bestLabel;
 
         return bestLabel;
     }
