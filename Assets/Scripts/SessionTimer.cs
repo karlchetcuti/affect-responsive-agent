@@ -1,5 +1,6 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class SessionTimer : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class SessionTimer : MonoBehaviour
     private float timeRemaining;
     private bool isRunning;
     private bool hasEnded;
+
+    public GameObject table;
+    public GameObject agentChair;
+    public GameObject agentModel;
 
     private void Start()
     {
@@ -86,6 +91,10 @@ public class SessionTimer : MonoBehaviour
 
         if (endSessionCanvas != null)
             endSessionCanvas.SetActive(true);
+
+        agentModel.SetActive(false);
+        table.SetActive(false);
+        agentChair.SetActive(false);
 
         Debug.Log("Session ended after 5 minutes.");
     }

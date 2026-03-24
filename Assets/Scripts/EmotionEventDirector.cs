@@ -8,7 +8,7 @@ public class EmotionEventDirector : MonoBehaviour
 
     [Header("Event Handlers")]
     public LightFlickerEvent lightFlickerEvent;
-    public ChairScrapeEvent chairScrapeEvent;
+    public ThunderEvent thunderEvent;
     public HeartbeatLoopEvent heartbeatLoopEvent;
     public WallKnockEvent wallKnockEvent;
     public LampExplosionEvent lampExplosionEvent;
@@ -57,8 +57,8 @@ public class EmotionEventDirector : MonoBehaviour
         if (!triggered && fearLike > 0.45f && lightFlickerEvent != null)
             triggered = lightFlickerEvent.TryTrigger(fearLike);
 
-        if (!triggered && angerLike > 0.35f && chairScrapeEvent != null)
-            triggered = chairScrapeEvent.TryTrigger(angerLike);
+        if (!triggered && angerLike > 0.35f && thunderEvent != null)
+            triggered = thunderEvent.TryTrigger(angerLike);
 
         if (!triggered && angerLike > 0.55f && lampExplosionEvent != null)
             triggered = lampExplosionEvent.TryTrigger(angerLike);
