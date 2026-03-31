@@ -1,16 +1,14 @@
-using System.Collections;
 using UnityEngine;
 
 public class EmotionEventDirector : MonoBehaviour
 {
     [Header("References")]
-    //public Agent agent;
     public ExperimentManager experiment;
     public EmotionalStateController emotionController;
 
     [Header("Event Handlers")]
     public LightFlickerEvent lightFlickerEvent;
-    public ChairScrapeEvent chairScrapeEvent;
+    public ThunderEvent thunderEvent;
     public HeartbeatLoopEvent heartbeatLoopEvent;
     public WallKnockEvent wallKnockEvent;
     public LampExplosionEvent lampExplosionEvent;
@@ -45,103 +43,27 @@ public class EmotionEventDirector : MonoBehaviour
 
         bool triggered = false;
 
-        float negativeValence = Mathf.Clamp01(-state.valence);
+        float negative = Mathf.Clamp01((-state.valence + 1f) * 0.5f);
+        float activated = Mathf.Clamp01((state.arousal + 1f) * 0.5f);
+        float submissive = Mathf.Clamp01((-state.dominance + 1f) * 0.5f);
+        float dominant = Mathf.Clamp01((state.dominance + 1f) * 0.5f);
 
-        // Slight anxious/stressed -> wall knock
-        if (!triggered &&
-            state.stress >= 0.55f &&
-            state.stress < 0.80f &&
-            state.arousal >= 0.45f &&
-            state.dominance < 0.45f &&
-            wallKnockEvent != null)
-        {
-            triggered = wallKnockEvent.TryTrigger(Mathf.Clamp01((state.stress + state.arousal) * 0.5f));
-        }
+        float fearLike = negative * activated * submissive;
+        float angerLike = negative * activated * dominant;
 
-        // High anxious/stressed -> light flicker
-        if (!triggered &&
-            state.stress > 0.78f &&
-            state.arousal > 0.60f &&
-            state.dominance < 0.50f &&
-            lightFlickerEvent != null)
-        {
-            triggered = lightFlickerEvent.TryTrigger(Mathf.Clamp01((state.stress + state.arousal) * 0.5f));
-        }
+        if (!triggered && fearLike > 0.30f && wallKnockEvent != null)
+            triggered = wallKnockEvent.TryTrigger(fearLike);
 
-        // Angry/defensive -> chair scrape
-        if (!triggered &&
-            state.arousal > 0.82f &&
-            state.dominance > 0.48f &&
-            negativeValence > 0.45f &&
-            chairScrapeEvent != null)
-        {
-            triggered = chairScrapeEvent.TryTrigger(Mathf.Clamp01((state.arousal + state.dominance) * 0.5f));
-        }
+        if (!triggered && fearLike > 0.45f && lightFlickerEvent != null)
+            triggered = lightFlickerEvent.TryTrigger(fearLike);
 
-        // High angry/defensive -> lamp explosion
-        if (!triggered &&
-            state.arousal > 0.93f &&
-            state.dominance > 0.62f &&
-            state.stress > 0.80f &&
-            negativeValence > 0.60f &&
-            lampExplosionEvent != null)
-        {
-            triggered = lampExplosionEvent.TryTrigger(Mathf.Clamp01((state.arousal + state.dominance + state.stress) / 3f));
-        }
+        if (!triggered && angerLike > 0.35f && thunderEvent != null)
+            triggered = thunderEvent.TryTrigger(angerLike);
+
+        if (!triggered && angerLike > 0.55f && lampExplosionEvent != null)
+            triggered = lampExplosionEvent.TryTrigger(angerLike);
 
         if (triggered)
             nextAllowedEventTime = Time.time + globalCooldownSeconds;
     }
-
-    //private void OnEmotionParsed(EmotionParser.EmotionData emo)
-    //{
-    //    if (experiment != null && !experiment.IsAdaptive)
-    //        return;
-
-    //    if (Time.time < nextAllowedEventTime)
-    //        return;
-
-    //    string emotion = NormalizeEmotion(emo.emotion);
-    //    float intensity = Mathf.Clamp01(emo.intensity);
-
-    //    bool triggered = false;
-
-    //    switch (emotion)
-    //    {
-    //        case "anxious":
-    //            if (lightFlickerEvent != null)
-    //                triggered = lightFlickerEvent.TryTrigger(intensity);
-    //            break;
-
-    //        case "angry":
-    //            if (audioStingerEvent != null)
-    //                triggered = audioStingerEvent.TryTrigger(intensity);
-    //            break;
-
-    //        case "sad":
-    //            if (folderSlideEvent != null)
-    //                triggered = folderSlideEvent.TryTrigger(intensity);
-    //            break;
-    //    }
-
-    //    if (triggered)
-    //        nextAllowedEventTime = Time.time + globalCooldownSeconds;
-    //}
-
-    //private string NormalizeEmotion(string emotion)
-    //{
-    //    if (string.IsNullOrWhiteSpace(emotion))
-    //        return "anxious";
-
-    //    switch (emotion.Trim().ToLowerInvariant())
-    //    {
-    //        case "anxious":
-    //        case "angry":
-    //        case "sad":
-    //        case "happy":
-    //            return emotion.Trim().ToLowerInvariant();
-    //        default:
-    //            return "anxious";
-    //    }
-    //}
 }

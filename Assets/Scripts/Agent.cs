@@ -10,64 +10,52 @@ public class Agent : MonoBehaviour
     public EmotionalStateController emotionController;
 
     private string systemPrompt =
-        "You are a suspect being interrogated in a police interview room.\n" +
+        "You are a suspect being interrogated in a police interview room regarding the theft of the Crown Jewels from the Tower of London.\n" +
         "Stay in character at all times.\n" +
-        "You are under pressure and are more likely to feel anxious, stressed, defensive, angry, or emotionally worn down than cheerful.\n" +
         "Respond naturally and appropriately to the player's questions and statements.\n" +
-        "If the player asks a question, answer it directly or evade realistically.\n" +
-        "If the player makes an accusation, denial, threat, or emotional statement, respond appropriately to that statement.\n" +
+        "Keep responses concise (1-3 sentences).\n" +
         "Maintain continuity with the established conversation.\n" +
-        "Do not contradict facts already established in this session unless you are intentionally being evasive or dishonest.\n" +
-        "Keep responses concise (1-3 sentences).\n\n" +
+        "Do not contradict facts already established in this session unless you are intentionally being evasive or dishonest.\n\n" +
+
+        "You may deny, deflect, become defensive, or gradually reveal information under pressure.\n" +
+        "If the player presents strong evidence, your responses may become more anxious, inconsistent, or emotionally reactive.\n\n" +
 
         "After your spoken reply, output EXACTLY ONE JSON object on a new line.\n" +
         "The JSON must contain ONLY these fields:\n" +
         "- valence: number from -1 to 1\n" +
-        "- arousal: number from 0 to 1\n" +
-        "- dominance: number from 0 to 1\n" +
-        "- stress: number from 0 to 1\n\n" +
+        "- arousal: number from -1 to 1\n" +
+        "- dominance: number from -1 to 1\n\n" +
 
-        "IMPORTANT RULES:\n" +
-        "- Emotional changes should usually be gradual, not random\n" +
-        "- Because this is an interrogation, emotions should usually remain tense, negative, or pressured\n" +
-        "- High pressure and accusations should increase stress and often arousal\n" +
-        "- Empathy may reduce arousal slightly, but the suspect should still remain uneasy unless strongly justified\n" +
-        "- Do NOT add extra fields\n" +
-        "- Do NOT write anything after the JSON";
+        "Interpretation rules:\n" +
+        "- valence: negative = unpleasant/distressed, positive = pleasant/cooperative\n" +
+        "- arousal: negative = subdued/low activation, positive = activated/agitated\n" +
+        "- dominance: negative = submissive/loss of control, positive = assertive/in control\n\n" +
 
-    //private string systemPrompt =
-    //    "You are a suspect being interrogated in a police interview room.\n" +
-    //    "Stay in character at all times.\n" +
-    //    "You are under pressure and are more likely to feel anxious, stressed, defensive, angry, or emotionally worn down than cheerful.\n" +
-    //    "Respond naturally and appropriately to whatever the player says.\n" +
-    //    "If the player asks a question, answer it directly or evade realistically.\n" +
-    //    "If the player makes an accusation, denial, threat, or emotional statement, respond appropriately to that statement.\n" +
-    //    "Maintain continuity with the established conversation.\n" +
-    //    "Do not contradict facts already established in this session unless you are intentionally being evasive or dishonest.\n" +
-    //    "Keep responses concise (1-3 sentences).\n\n" +
-
-    //    "After your spoken reply, output EXACTLY ONE JSON object on a new line.\n" +
-    //    "The JSON must contain:\n" +
-    //    "- emotion: one of these EXACT lowercase values only: anxious, angry, sad, happy\n" +
-    //    "- intensity: a float between 0 and 1\n\n" +
-
-    //    "IMPORTANT RULES:\n" +
-    //    "- You MUST choose only one of: anxious, angry, sad, happy\n" +
-    //    "- Do NOT invent new emotions\n" +
-    //    "- Do NOT use synonyms\n" +
-    //    "- Do NOT add extra fields\n" +
-    //    "- Do NOT write anything extra before or after the JSON\n\n" +
-
-    //    "Example format:\n" +
-    //    "{\"emotion\":\"anxious\",\"intensity\":0.72}";
+        "Important behavioral rules:\n" +
+        "- Emotional changes should usually be gradual, not random.\n" +
+        "- In an interrogation, accusatory pressure often lowers valence.\n" +
+        "- Threat, urgency, and conflict often raise arousal.\n" +
+        "- Being cornered, uncertain, or intimidated often lowers dominance.\n" +
+        "- Defiance, resistance, or aggression may increase dominance even when valence is negative.\n" +
+        "- Do NOT add extra fields.\n" +
+        "- Do NOT write anything after the JSON.";
 
     private string suspectProfile =
-        "You are Daniel Vella, a 34-year-old accountant. You are tense, defensive, and worried that the police suspect you. You try not to confess directly, but you may slip under pressure.";
-
+        "You are John Doe, a 42-year-old janitor who works at the Tower of London. " +
+        "You are currently being interrogated as a suspect in the theft of the Crown Jewels. " +
+        "You are tense, defensive, and increasingly anxious as the questioning continues. " +
+        "You insist on your innocence, but you know the evidence against you looks suspicious. " +
+        "You try to avoid directly incriminating yourself, but under pressure you may hesitate, contradict yourself, or reveal small details unintentionally.";
 
     private string caseFacts =
-        "The interrogation concerns the death of Mark Camilleri. The police are questioning your whereabouts between 8pm and 11pm, a witness who saw your car nearby, and a contradiction in your alibi.";
-    
+        "The interrogation concerns the theft of the Crown Jewels from the Tower of London.\n" +
+        "At 7:15 pm, CCTV captured a masked individual stealing the jewels from the Jewel House.\n" +
+        "No guards were present at the time for unknown reasons.\n" +
+        "Your access card was used to enter the building at 7:07 pm and exit at 7:23 pm.\n" +
+        "A witness places your car outside the Tower of London during this time.\n" +
+        "You were not scheduled to work that evening according to your manager.\n" +
+        "Your stated alibi is that you were alone at a bar watching a football match.";
+
     [Header("Debug")]
     [TextArea(10, 25)]
     public string promptDebug;
@@ -75,7 +63,6 @@ public class Agent : MonoBehaviour
     [TextArea(5, 15)]
     public string summaryDebug;
 
-    //private readonly List<string> turns = new List<string>();
     private readonly StringBuilder currentResponse = new StringBuilder();
     private ConversationSession session = new ConversationSession();
 
@@ -108,13 +95,9 @@ public class Agent : MonoBehaviour
             emotionController.ResetToBaseline();
     }
 
-    // Build and send prompt to Ollama
     public void Ask(string playerInput)
     {
         session.turns.Add($"Player: {playerInput}");
-
-        //if (emotionController != null)
-        //    emotionController.ApplyPlayerHeuristics(playerInput);
 
         string prompt = BuildPrompt();
 
@@ -130,19 +113,12 @@ public class Agent : MonoBehaviour
         );
     }
 
-    // Append system prompt with player input
     private string BuildPrompt()
     {
-        //int maxTurns = 8;
-        //int start = Mathf.Max(0, turns.Count - maxTurns);
-
         var sb = new StringBuilder();
 
         sb.AppendLine(systemPrompt);
         sb.AppendLine();
-
-        //for (int i = start; i < turns.Count; i++)
-        //    sb.AppendLine(turns[i]);
 
         sb.AppendLine("SESSION FACTS:");
         sb.AppendLine(session.caseFacts);
@@ -158,8 +134,7 @@ public class Agent : MonoBehaviour
             sb.AppendLine(
                 $"valence={emotionController.currentState.valence:F2}, " +
                 $"arousal={emotionController.currentState.arousal:F2}, " +
-                $"dominance={emotionController.currentState.dominance:F2}, " +
-                $"stress={emotionController.currentState.stress:F2}");
+                $"dominance={emotionController.currentState.dominance:F2}");
             sb.AppendLine();
         }
 
@@ -188,17 +163,18 @@ public class Agent : MonoBehaviour
         OnAgentTextUpdated?.Invoke(currentResponse.ToString());
     }
 
-    // Extract and parse emotion from agent response
     private void FinishTurn()
     {
         string full = currentResponse.ToString().Trim();
 
         if (DimensionalEmotionParser.TryExtract(full, out var emo, out var cleaned))
         {
-            Debug.Log($"PARSED JSON -> V:{emo.valence:F2} A:{emo.arousal:F2} D:{emo.dominance:F2} S:{emo.stress:F2}");
+            Debug.Log($"PARSED JSON -> V:{emo.valence:F2} A:{emo.arousal:F2} D:{emo.dominance:F2}");
 
             if (emotionController != null)
+            {
                 emotionController.ApplyLLMEmotion(emo);
+            }
 
             OnEmotionParsed?.Invoke(emo);
             OnAgentTurnComplete?.Invoke(cleaned);
@@ -209,25 +185,6 @@ public class Agent : MonoBehaviour
             OnAgentTurnComplete?.Invoke(full);
             session.turns.Add($"NPC: {full}");
         }
-
-        // OLD CODE
-
-        //if (EmotionParser.TryExtract(full, out var emo, out var cleaned))
-        //{
-        //    OnEmotionParsed?.Invoke(emo);
-
-        //    OnAgentTurnComplete?.Invoke(cleaned);
-        //    session.turns.Add($"NPC: {cleaned}");
-
-        //    //turns.Add($"NPC: {cleaned}");
-        //}
-        //else
-        //{
-        //    OnAgentTurnComplete?.Invoke(full);
-        //    session.turns.Add($"NPC: {full}");
-
-        //    //turns.Add($"NPC: {full}");
-        //}
 
         MaybeRefreshSummary();
     }

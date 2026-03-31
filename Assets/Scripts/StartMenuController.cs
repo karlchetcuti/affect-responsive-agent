@@ -6,21 +6,18 @@ public class StartMenuController : MonoBehaviour
     public Agent agent;
     public VoiceConversationController voice;
     public SessionTimer sessionTimer;
+    public GameObject table;
+    public GameObject agentChair;
+    public GameObject agentModel;
+    public GameObject pauseCanvas;
 
     public void StartExperience()
     {
-        // Hide menu
         menuCanvas.SetActive(false);
+        pauseCanvas.SetActive(true);
 
-        // Reset session
         if (agent != null)
             agent.StartNewSession();
-
-        if (voice != null)
-            voice.isActive = true;
-
-        if (sessionTimer != null)
-            sessionTimer.StartTimer();
 
         Debug.Log("Experience started");
     }

@@ -1,10 +1,11 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class SessionTimer : MonoBehaviour
 {
     [Header("Session Length")]
-    public float sessionLengthSeconds = 300f; // 5 minutes
+    public float sessionLengthSeconds = 300f;
 
     [Header("UI")]
     public TextMeshProUGUI timerText;
@@ -20,6 +21,10 @@ public class SessionTimer : MonoBehaviour
     private float timeRemaining;
     private bool isRunning;
     private bool hasEnded;
+
+    public GameObject table;
+    public GameObject agentChair;
+    public GameObject agentModel;
 
     private void Start()
     {
@@ -87,6 +92,10 @@ public class SessionTimer : MonoBehaviour
         if (endSessionCanvas != null)
             endSessionCanvas.SetActive(true);
 
+        agentModel.SetActive(false);
+        table.SetActive(false);
+        agentChair.SetActive(false);
+
         Debug.Log("Session ended after 5 minutes.");
     }
 
@@ -102,16 +111,4 @@ public class SessionTimer : MonoBehaviour
 
         timerText.text = $"{minutes:00}:{seconds:00}";
     }
-
-    //public void ReturnToMenu()
-    //{
-    //    ResetTimer();
-    //    UpdateTimerUI();
-
-    //    if (endSessionCanvas != null)
-    //        endSessionCanvas.SetActive(false);
-
-    //    if (startMenuCanvas != null)
-    //        startMenuCanvas.SetActive(true);
-    //}
 }

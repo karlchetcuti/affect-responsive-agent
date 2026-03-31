@@ -15,7 +15,6 @@ public class UIController : MonoBehaviour
         ai.OnAgentTurnComplete += FinalizeAgentText;
     }
 
-    // Send input text to AI model
     public void Send()
     {
         string msg = input.text.Trim();

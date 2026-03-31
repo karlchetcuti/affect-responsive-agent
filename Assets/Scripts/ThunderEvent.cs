@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ChairScrapeEvent : MonoBehaviour
+public class ThunderEvent : MonoBehaviour
 {
     [Header("References")]
     public AudioSource audioSource;
@@ -11,8 +11,8 @@ public class ChairScrapeEvent : MonoBehaviour
     [Range(0f, 1f)] public float intensityBonus = 0.1f;
 
     [Header("Playback")]
-    public float minVolume = 0.6f;
-    public float maxVolume = 1.0f;
+    public float minVolume = 0.2f;
+    public float maxVolume = 0.6f;
     public float minPitch = 0.95f;
     public float maxPitch = 1.03f;
 
@@ -41,7 +41,7 @@ public class ChairScrapeEvent : MonoBehaviour
 
         nextAllowedTime = Time.time + cooldownSeconds;
 
-        Debug.Log("Executed Chair Scrape Event");
+        Debug.Log("Executed Thunder Event");
 
         return true;
     }

@@ -13,10 +13,9 @@ public class EmotionDebugUI : MonoBehaviour
 
         var s = emotionController.currentState;
         debugText.text =
-            $"State: {emotionController.GetDebugLabel()}\n" +
-            $"Valence: {s.valence:F2}\n" +
+            $"State: {emotionController.GetEmotionLabel()}\n" +
+            $"Pleasure/Valence: {s.valence:F2}\n" +
             $"Arousal: {s.arousal:F2}\n" +
-            $"Dominance: {s.dominance:F2}\n" +
-            $"Stress: {s.stress:F2}";
+            $"Dominance: {s.dominance:F2}";
     }
 }

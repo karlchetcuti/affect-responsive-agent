@@ -9,7 +9,6 @@ public static class DimensionalEmotionParser
         public float valence;
         public float arousal;
         public float dominance;
-        public float stress;
     }
 
     public static bool TryExtract(string text, out DimensionalEmotionData data, out string cleanedText)
@@ -32,9 +31,8 @@ public static class DimensionalEmotionParser
             data = new DimensionalEmotionData
             {
                 valence = Mathf.Clamp(parsed.valence, -1f, 1f),
-                arousal = Mathf.Clamp01(parsed.arousal),
-                dominance = Mathf.Clamp01(parsed.dominance),
-                stress = Mathf.Clamp01(parsed.stress)
+                arousal = Mathf.Clamp(parsed.arousal, -1f, 1f),
+                dominance = Mathf.Clamp(parsed.dominance, -1f, 1f)
             };
 
             cleanedText = text.Substring(0, lastBrace).Trim();

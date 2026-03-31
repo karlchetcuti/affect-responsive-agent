@@ -11,7 +11,6 @@ public class VoiceConversationController : MonoBehaviour
     public MonoBehaviour ttsBehaviour;
 
     public Text partialTranscriptText;
-    //public KeyCode pushToTalkKey = KeyCode.Space;
 
     [Header("XR Input")]
     public InputActionReference pushToTalkAction;
@@ -52,19 +51,6 @@ public class VoiceConversationController : MonoBehaviour
             pushToTalkAction.action.Disable();
         }
     }
-
-    //private void Update()
-    //{
-    //    if (Input.GetKeyDown(pushToTalkKey))
-    //    {
-    //        BeginListening();
-    //    }
-
-    //    if (Input.GetKeyUp(pushToTalkKey))
-    //    {
-    //        EndListening();
-    //    }
-    //}
 
     private void OnPushToTalkStarted(InputAction.CallbackContext ctx)
     {

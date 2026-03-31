@@ -3,25 +3,63 @@ using UnityEngine;
 public class EmotionalStateController : MonoBehaviour
 {
     [Header("State")]
-    public DimensionalEmotionData currentState = new DimensionalEmotionData();
-    public DimensionalEmotionData targetState = new DimensionalEmotionData();
+    public DimensionalEmotionData baselineState = DimensionalEmotionData.Neutral();
+    public DimensionalEmotionData currentState;
+    public DimensionalEmotionData targetState;
+    public string emotionLabel;
 
-    [Header("Baseline Interrogation State")]
-    [Range(-1f, 1f)] public float baselineValence = -0.45f;
-    [Range(0f, 1f)] public float baselineArousal = 0.55f;
-    [Range(0f, 1f)] public float baselineDominance = 0.30f;
-    [Range(0f, 1f)] public float baselineStress = 0.60f;
+    private bool inDebug = false;
 
-    [Header("Smoothing")]
-    [Range(0.1f, 10f)] public float smoothingSpeed = 2f;
+    [Header("Dynamics")]
+    [Tooltip("Set from pilot calibration, not theory by fiat. 0 = immediate.")]
+    [Min(0f)] public float responseHalfLifeSeconds = 0f;
 
-    [Header("Session Modifiers")]
-    [Range(0f, 1f)] public float pressure = 0.5f;
-    [Range(0f, 1f)] public float trust = 0.2f;
-    [Range(0f, 1f)] public float defensiveness = 0.6f;
-    [Range(0f, 1f)] public float fatigue = 0f;
+    [Tooltip("Set from pilot calibration, not theory by fiat. 0 = no autonomous return.")]
+    [Min(0f)] public float recoveryHalfLifeSeconds = 0f;
 
     public System.Action<DimensionalEmotionData> OnStateUpdated;
+
+    private static readonly DimensionalEmotionData Joy = new DimensionalEmotionData
+    {
+        valence = 0.76f,
+        arousal = 0.48f,
+        dominance = 0.35f
+    };
+
+    private static readonly DimensionalEmotionData Anger = new DimensionalEmotionData
+    {
+        valence = -0.43f,
+        arousal = 0.67f,
+        dominance = 0.34f
+    };
+
+    private static readonly DimensionalEmotionData Fear = new DimensionalEmotionData
+    {
+        valence = -0.64f,
+        arousal = 0.60f,
+        dominance = -0.43f
+    };
+
+    private static readonly DimensionalEmotionData Sadness = new DimensionalEmotionData
+    {
+        valence = -0.63f,
+        arousal = -0.27f,
+        dominance = -0.33f
+    };
+
+    private static readonly DimensionalEmotionData Surprise = new DimensionalEmotionData
+    {
+        valence = 0.40f,
+        arousal = 0.67f,
+        dominance = -0.13f
+    };
+
+    private static readonly DimensionalEmotionData Disgust = new DimensionalEmotionData
+    {
+        valence = -0.60f,
+        arousal = 0.35f,
+        dominance = 0.11f
+    };
 
     private void Start()
     {
@@ -30,101 +68,79 @@ public class EmotionalStateController : MonoBehaviour
 
     private void Update()
     {
-        float t = 1f - Mathf.Exp(-Time.deltaTime * smoothingSpeed);
+        float responseK = HalfLifeToLerp(responseHalfLifeSeconds, Time.deltaTime);
 
-        currentState.valence = Mathf.Lerp(currentState.valence, targetState.valence, t);
-        currentState.arousal = Mathf.Lerp(currentState.arousal, targetState.arousal, t);
-        currentState.dominance = Mathf.Lerp(currentState.dominance, targetState.dominance, t);
-        currentState.stress = Mathf.Lerp(currentState.stress, targetState.stress, t);
+        currentState.valence = Mathf.Lerp(currentState.valence, targetState.valence, responseK);
+        currentState.arousal = Mathf.Lerp(currentState.arousal, targetState.arousal, responseK);
+        currentState.dominance = Mathf.Lerp(currentState.dominance, targetState.dominance, responseK);
 
         OnStateUpdated?.Invoke(currentState);
     }
 
     public void ResetToBaseline()
     {
-        currentState.valence = baselineValence;
-        currentState.arousal = baselineArousal;
-        currentState.dominance = baselineDominance;
-        currentState.stress = baselineStress;
-
-        targetState = currentState.Clone();
-
-        pressure = 0.5f;
-        trust = 0.2f;
-        defensiveness = 0.6f;
-        fatigue = 0f;
+        currentState = baselineState.Clone();
+        targetState = baselineState.Clone();
     }
 
     public void ApplyLLMEmotion(DimensionalEmotionData llmEmotion)
     {
         targetState.valence = Mathf.Clamp(llmEmotion.valence, -1f, 1f);
-        targetState.arousal = Mathf.Clamp01(llmEmotion.arousal);
-        targetState.dominance = Mathf.Clamp01(llmEmotion.dominance);
-        targetState.stress = Mathf.Clamp01(llmEmotion.stress);
+        targetState.arousal = Mathf.Clamp(llmEmotion.arousal, -1f, 1f);
+        targetState.dominance = Mathf.Clamp(llmEmotion.dominance, -1f, 1f);
 
-        ApplyContextBiases();
-        ClampToScenarioBounds();
+       Debug.Log($"State: {GetEmotionLabel()}," +
+           $"Pleasure/Valence: {targetState.valence:F2}," +
+           $"Arousal: {targetState.arousal:F2}," +
+           $"Dominance: {targetState.dominance:F2}");
+
+        inDebug = true;
     }
 
-    public void ApplyPlayerHeuristics(string playerInput)
+    public string GetEmotionLabel()
     {
-        if (string.IsNullOrWhiteSpace(playerInput))
-            return;
+        string bestLabel = "neutral";
+        float bestDistance = Distance(currentState, DimensionalEmotionData.Neutral());
 
-        string text = playerInput.ToLowerInvariant();
+        TryPrototype("joy", Joy, ref bestLabel, ref bestDistance);
+        TryPrototype("anger", Anger, ref bestLabel, ref bestDistance);
+        TryPrototype("fear/anxiety", Fear, ref bestLabel, ref bestDistance);
+        TryPrototype("sadness", Sadness, ref bestLabel, ref bestDistance);
+        TryPrototype("surprise", Surprise, ref bestLabel, ref bestDistance);
+        TryPrototype("disgust", Disgust, ref bestLabel, ref bestDistance);
 
-        if (text.Contains("liar") || text.Contains("lying") || text.Contains("killed") || text.Contains("murder"))
+        emotionLabel = bestLabel;
+
+        return bestLabel;
+    }
+
+    private void TryPrototype(
+        string label,
+        DimensionalEmotionData proto,
+        ref string bestLabel,
+        ref float bestDistance)
+    {
+        float d = Distance(currentState, proto);
+        if (d < bestDistance)
         {
-            pressure = Mathf.Clamp01(pressure + 0.12f);
-            defensiveness = Mathf.Clamp01(defensiveness + 0.10f);
-            targetState.arousal = Mathf.Clamp01(targetState.arousal + 0.10f);
-            targetState.stress = Mathf.Clamp01(targetState.stress + 0.12f);
-            targetState.valence = Mathf.Clamp(targetState.valence - 0.08f, -1f, 1f);
-        }
-
-        if (text.Contains("calm down") || text.Contains("help me understand") || text.Contains("tell me the truth"))
-        {
-            trust = Mathf.Clamp01(trust + 0.08f);
-            defensiveness = Mathf.Clamp01(defensiveness - 0.05f);
-            targetState.arousal = Mathf.Clamp01(targetState.arousal - 0.05f);
-        }
-
-        if (text.Contains("where were you") || text.Contains("what happened") || text.Contains("why"))
-        {
-            pressure = Mathf.Clamp01(pressure + 0.04f);
-            targetState.stress = Mathf.Clamp01(targetState.stress + 0.03f);
+            bestDistance = d;
+            bestLabel = label;
         }
     }
 
-    private void ApplyContextBiases()
+    private static float Distance(DimensionalEmotionData a, DimensionalEmotionData b)
     {
-        targetState.stress = Mathf.Clamp01(targetState.stress + pressure * 0.15f + defensiveness * 0.10f);
-        targetState.dominance = Mathf.Clamp01(targetState.dominance + defensiveness * 0.10f - trust * 0.05f);
-        targetState.valence = Mathf.Clamp(targetState.valence - pressure * 0.10f, -1f, 1f);
-
-        fatigue = Mathf.Clamp01(fatigue + 0.01f);
-        targetState.arousal = Mathf.Clamp01(targetState.arousal - fatigue * 0.05f);
+        float dv = a.valence - b.valence;
+        float da = a.arousal - b.arousal;
+        float dd = a.dominance - b.dominance;
+        return Mathf.Sqrt(dv * dv + da * da + dd * dd);
     }
 
-    private void ClampToScenarioBounds()
+    private static float HalfLifeToLerp(float halfLifeSeconds, float dt)
     {
-        targetState.valence = Mathf.Clamp(targetState.valence, -1f, 0.25f);
-        targetState.arousal = Mathf.Clamp01(targetState.arousal);
-        targetState.dominance = Mathf.Clamp01(targetState.dominance);
-        targetState.stress = Mathf.Clamp(targetState.stress, 0.2f, 1f);
-    }
+        if (halfLifeSeconds <= 0f)
+            return 1f;
 
-    public string GetDebugLabel()
-    {
-        if (currentState.valence > 0.05f && currentState.stress < 0.45f)
-            return "calmer/cooperative";
-
-        if (currentState.arousal > 0.75f && currentState.dominance > 0.45f)
-            return "angry/defensive";
-
-        if (currentState.arousal < 0.35f && currentState.dominance < 0.25f)
-            return "resigned/sad";
-
-        return "anxious/stressed";
+        return 1f - Mathf.Pow(0.5f, dt / halfLifeSeconds);
     }
 }

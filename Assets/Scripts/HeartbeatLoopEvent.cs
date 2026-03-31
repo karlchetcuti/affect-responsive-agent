@@ -5,11 +5,6 @@ public class HeartbeatLoopEvent : MonoBehaviour
     [Header("References")]
     public AudioSource audioSource;
 
-    [Header("Thresholds")]
-    public float minStress = 0.88f;
-    public float minArousal = 0.78f;
-    public float maxDominance = 0.40f;
-
     [Header("Playback")]
     public float minVolume = 0.10f;
     public float maxVolume = 0.35f;
@@ -21,31 +16,24 @@ public class HeartbeatLoopEvent : MonoBehaviour
         if (audioSource == null)
             return;
 
-        bool shouldPlay =
-            state.stress >= minStress &&
-            state.arousal >= minArousal &&
-            state.dominance <= maxDominance;
+        float negative = Mathf.Clamp01((-state.valence + 1f) * 0.5f);
+        float activated = Mathf.Clamp01((state.arousal + 1f) * 0.5f);
+        float submissive = Mathf.Clamp01((-state.dominance + 1f) * 0.5f);
+
+        float fearLike = negative * activated * submissive;
+        bool shouldPlay = fearLike > 0.45f;
 
         if (shouldPlay)
         {
-            float intensity = Mathf.Clamp01((state.stress + state.arousal) * 0.5f);
-
-            audioSource.volume = Mathf.Lerp(minVolume, maxVolume, intensity);
-            audioSource.pitch = Mathf.Lerp(minPitch, maxPitch, intensity);
+            audioSource.volume = Mathf.Lerp(minVolume, maxVolume, fearLike);
+            audioSource.pitch = Mathf.Lerp(minPitch, maxPitch, fearLike);
 
             if (!audioSource.isPlaying)
-            {
-                Debug.Log("Executed Heartbeat Loop Event");
                 audioSource.Play();
-            }
         }
-        else
+        else if (audioSource.isPlaying)
         {
-            if (audioSource.isPlaying)
-            {
-                Debug.Log("Stopped Heartbeat Loop Event");
-                audioSource.Stop();
-            }
+            audioSource.Stop();
         }
     }
 }
