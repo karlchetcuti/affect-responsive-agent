@@ -95,7 +95,6 @@ public class Agent : MonoBehaviour
             emotionController.ResetToBaseline();
     }
 
-    // Build and send prompt to Ollama
     public void Ask(string playerInput)
     {
         session.turns.Add($"Player: {playerInput}");
@@ -114,7 +113,6 @@ public class Agent : MonoBehaviour
         );
     }
 
-    // Append system prompt with player input
     private string BuildPrompt()
     {
         var sb = new StringBuilder();
@@ -165,7 +163,6 @@ public class Agent : MonoBehaviour
         OnAgentTextUpdated?.Invoke(currentResponse.ToString());
     }
 
-    // Extract and parse emotion from agent response
     private void FinishTurn()
     {
         string full = currentResponse.ToString().Trim();

@@ -89,6 +89,11 @@ public class EmotionalStateController : MonoBehaviour
         targetState.arousal = Mathf.Clamp(llmEmotion.arousal, -1f, 1f);
         targetState.dominance = Mathf.Clamp(llmEmotion.dominance, -1f, 1f);
 
+       Debug.Log($"State: {GetEmotionLabel()}," +
+           $"Pleasure/Valence: {targetState.valence:F2}," +
+           $"Arousal: {targetState.arousal:F2}," +
+           $"Dominance: {targetState.dominance:F2}");
+
         inDebug = true;
     }
 

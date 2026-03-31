@@ -28,7 +28,6 @@ public class OllamaClient : MonoBehaviour
         }
     }
 
-    // Send POST request to Ollama with player prompt
     public IEnumerator SendPrompt(
         string prompt,
         Action<string> onToken,

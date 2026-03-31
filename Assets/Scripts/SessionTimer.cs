@@ -5,7 +5,7 @@ using static UnityEngine.Rendering.DebugUI;
 public class SessionTimer : MonoBehaviour
 {
     [Header("Session Length")]
-    public float sessionLengthSeconds = 300f; // 5 minutes
+    public float sessionLengthSeconds = 300f;
 
     [Header("UI")]
     public TextMeshProUGUI timerText;
@@ -111,16 +111,4 @@ public class SessionTimer : MonoBehaviour
 
         timerText.text = $"{minutes:00}:{seconds:00}";
     }
-
-    //public void ReturnToMenu()
-    //{
-    //    ResetTimer();
-    //    UpdateTimerUI();
-
-    //    if (endSessionCanvas != null)
-    //        endSessionCanvas.SetActive(false);
-
-    //    if (startMenuCanvas != null)
-    //        startMenuCanvas.SetActive(true);
-    //}
 }

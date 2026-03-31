@@ -111,10 +111,6 @@ public class WindowsDictationStt : MonoBehaviour, ISttService
     {
         latestFinalResult = text;
         Debug.Log($"Dictation result: {text} ({confidence})");
-
-        //IsListening = false;
-        //stopRequested = false;
-        //onFinalText?.Invoke(text);
     }
 
     private void HandleComplete(DictationCompletionCause cause)
@@ -160,24 +156,6 @@ public class WindowsDictationStt : MonoBehaviour, ISttService
         stopRequested = false;
         onError?.Invoke($"Dictation error: {error} ({hresult})");
     }
-
-    //private void OnApplicationFocus(bool hasFocus)
-    //{
-    //    if (!hasFocus)
-    //    {
-    //        Debug.Log("Application lost focus; ending dictation safely.");
-    //        StopListening();
-    //    }
-    //}
-
-    //private void OnApplicationPause(bool pauseStatus)
-    //{
-    //    if (pauseStatus)
-    //    {
-    //        Debug.Log("Application paused; ending dictation safely.");
-    //        StopListening();
-    //    }
-    //}
 
     private void OnDestroy()
     {

@@ -3457,6 +3457,17 @@ public partial class @XRIDefaultInputActions: IInputActionCollection2, IDisposab
                 },
                 {
                     ""name"": """",
+                    ""id"": ""86541d49-385f-4f19-a66e-5aff7cad4aa5"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PushToTalk"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""97f3aae2-9798-457b-8c1b-e4a5b23c06d4"",
                     ""path"": ""<OculusTouchController>{RightHand}/{SecondaryTrigger}"",
                     ""interactions"": """",

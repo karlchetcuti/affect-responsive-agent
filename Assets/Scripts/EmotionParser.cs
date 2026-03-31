@@ -10,7 +10,6 @@ public static class EmotionParser
         public float intensity;
     }
 
-    // Extract emotion data from agent response
     public static bool TryExtract(string text, out EmotionData data, out string cleanedText)
     {
         data = null;
